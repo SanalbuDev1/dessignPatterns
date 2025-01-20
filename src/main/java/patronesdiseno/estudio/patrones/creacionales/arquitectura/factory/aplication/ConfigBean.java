@@ -1,35 +1,50 @@
 package patronesdiseno.estudio.patrones.creacionales.arquitectura.factory.aplication;
 
+import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 import patronesdiseno.estudio.patrones.creacionales.arquitectura.factory.domain.dto.Box;
+import patronesdiseno.estudio.patrones.creacionales.arquitectura.factory.domain.usecase.gateway.OperationDataBase;
 import patronesdiseno.estudio.patrones.creacionales.arquitectura.factory.domain.usecase.transport.Transport;
-import patronesdiseno.estudio.patrones.creacionales.arquitectura.factory.domain.usecase.transportStrategy.TransportBox;
-import patronesdiseno.estudio.patrones.creacionales.arquitectura.factory.domain.usecase.transportStrategy.TransportStrategy;
+import patronesdiseno.estudio.patrones.creacionales.arquitectura.factory.domain.usecase.transportStrategy.*;
+import patronesdiseno.estudio.patrones.creacionales.arquitectura.factory.infraestructure.r2dbc.OracleDataBase;
 
 import java.util.List;
 
 @Configuration
 public class ConfigBean {
 
-    private final List<TransportStrategy> strategies;
-
-    public ConfigBean(List<TransportStrategy> strategies) {
-        this.strategies = strategies;
+    @Bean
+    public TransportSelectionService transportSelectionService(List<TransportStrategy> strategies) {
+        return new TransportSelectionService(strategies);
     }
 
     @Bean
-    public TransportBox transportBox() {
-        return new TransportBox(this::selectTransport);
+    public OperationDataBase operationDataBase() {
+        return new OracleDataBase();
     }
 
-    private Transport selectTransport(Box box) {
-        return strategies.stream()
-                .filter(strategy -> strategy.supports(box))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("No suitable transport found for box: " + box))
-                .getTransport();
+    @Bean
+    public TransportBox transportBox(TransportSelectionService selectionService, OperationDataBase operationDataBase) {
+        return new TransportBox(selectionService, operationDataBase);
     }
+
+    @Bean
+    public TransportStrategy getTransportAirplaneStrategy() {
+        return new AirplaneStrategy();
+    }
+
+    @Bean
+    public TransportStrategy getTransportShipStrategy() {
+        return new ShipStrategy();
+    }
+
+    @Bean
+    public TransportStrategy getTransportTruckStrategy() {
+        return new TruckStrategy();
+    }
+
+
 
 }

@@ -8,5 +8,4 @@ public interface OperationDataBase {
     void save(Box box);
     List<Box> findAll();
 
-
 }
